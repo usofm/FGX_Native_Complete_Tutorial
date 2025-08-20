@@ -1,0 +1,129 @@
+# FGX Native – Dialogs (Deep Guide)
+
+## 1) Standard Dialog Component
+
+### 🧩 Controls & Properties (.xfm)
+- **lTitle**: `TfgLabel`
+  - `Text = 'Use Google'#39's location service?'`
+  - `PositionMode = Relative`
+  - `Position.X = 24.000000000000000000`
+  - `Position.Y = 24.000000000000000000`
+  - `Size.Width = 276.000000000000000000`
+  - `Size.Height = 28.000000000000000000`
+- **fgLabel2**: `TfgLabel`
+  - `Text = `
+  - `Alignment.FlexGrow = 1.000000000000000000`
+  - `PositionMode = Relative`
+  - `Size.Width = 276.000000000000000000`
+  - `Size.Height = 79.000000000000000000`
+- **lContent**: `TfgLayout`
+  - `Alignment.FlexGrow = 1.000000000000000000`
+  - `PositionMode = Relative`
+  - `Position.X = 24.000000000000000000`
+  - `Position.Y = 76.000000000000000000`
+  - `Size.Width = 276.000000000000000000`
+  - `Size.Height = 79.000000000000000000`
+- **btnDisagree**: `TfgButton`
+  - `Text = 'Disagree'`
+  - `PositionMode = Relative`
+  - `Position.X = 89.000000000000000000`
+  - `Size.Width = 98.000000000000000000`
+  - `Size.Height = 36.000000000000000000`
+  - `OnTap = btnDisagreeTap`
+- **btnAgree**: `TfgButton`
+  - `Text = 'Agree'`
+  - `PositionMode = Relative`
+  - `Position.X = 195.000000000000000000`
+  - `Size.Width = 81.000000000000000000`
+  - `Size.Height = 36.000000000000000000`
+  - `OnTap = btnAgreeTap`
+- **lFooter**: `TfgLayout`
+  - `PositionMode = Relative`
+  - `Position.X = 24.000000000000000000`
+  - `Position.Y = 187.000000000000000000`
+  - `Size.Width = 276.000000000000000000`
+  - `Size.Height = 36.000000000000000000`
+- **fgCardPanel1**: `TfgCardPanel`
+  - `PositionMode = Relative`
+  - `Position.X = 50.000000000000000000`
+  - `Position.Y = 233.000000000000000000`
+  - `Size.Width = 324.000000000000000000`
+  - `Size.Height = 231.000000000000000000`
+
+### 📝 Handlers (snippets)
+```pascal
+procedure TDialogStandard.btnAgreeTap(Sender: TObject)
+begin
+CloseModal(mrOk);
+end;
+```
+```pascal
+procedure TDialogStandard.btnDisagreeTap(Sender: TObject)
+begin
+CloseModal(mrCancel);
+end;
+```
+```pascal
+procedure TDialogStandard.CloseModal(const AModalResult: TModalResult)
+begin
+if Assigned(FResultCallback) then
+    FResultCallback(AModalResult);
+
+  TfgAnimationHelper.HideModalForm(Self);
+end;
+```
+
+---
+## 2) Dialog Usage Form (Form.Dialog.pas)
+
+- (no explicit assigns parsed)
+
+### 📝 Relevant handlers
+
+---
+## 3) Main Form: Where dialogs are launched
+
+### 📄 MainForm.xfm key controls
+- **fgButton1**: `TfgButton` (Text='Show Dialog'; OnTap=fgButton1Tap)
+
+### 🔔 Event wiring
+
+### 📝 Example handlers (showing dialog)
+```pascal
+procedure TFormMain.fgButton1Tap(Sender: TObject)
+begin
+TDialogStandard.Execute(procedure (const AResult: TModalResult)
+  begin
+    TfgDialogs.ShowMessage('ModalResult: ' + Integer(AResult).ToString);
+  end);
+end;
+```
+
+---
+## 4) Pattern: Showing a standard dialog (OK/Cancel) with callback
+
+```pascal
+procedure TFormMain.BtnShowDialogTap(Sender: TObject);
+var
+  Dlg: TDialogStandard;
+begin
+  Dlg := TDialogStandard.Create(Self);
+  try
+    Dlg.TitleText := 'Confirm action';
+    Dlg.MessageText := 'Are you sure you want to proceed?';
+    Dlg.ShowModal(
+      procedure (const AResult: TModalResult)
+      begin
+        if AResult = mrOK then
+          DoProceed
+        else
+          DoCancel;
+      end);
+  finally
+    // در FGX معمولاً فرم‌های مودال بعد از بسته‌شدن آزاد می‌شوند؛ در صورت نیاز Free کنید
+  end;
+end;
+```
+**نکات**:
+- برای بستن از داخل دیالوگ: `ModalResult := mrOK` یا `mrCancel` در رویداد Tap دکمه‌ها.
+- برای عبور دیتا به دیالوگ: پراپرتی‌های public روی `TDialogStandard` تعریف کنید (مثل `TitleText`, `MessageText`)، و در `OnCreate`/`OnShow` به کنترل‌ها Bind کنید.
